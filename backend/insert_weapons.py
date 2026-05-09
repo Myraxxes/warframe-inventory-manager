@@ -1,22 +1,8 @@
-import os
-import psycopg2
-from dotenv import load_dotenv
-
+from db import get_connection
 from load_weapons import load_weapons
 
-load_dotenv()
-
-conn = psycopg2.connect(
-    dbname=os.getenv("DB_NAME"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    host=os.getenv("DB_HOST"),
-    port=os.getenv("DB_PORT")
-)
-
+conn = get_connection()
 cursor = conn.cursor()
-
-print("Connected to database!")
 
 # Load cleaned weapon data
 weapons = load_weapons()
@@ -47,5 +33,3 @@ print(f"Inserted {len(weapons)} weapons successfully!")
 
 cursor.close()
 conn.close()
-
-print("Database connection closed.")
