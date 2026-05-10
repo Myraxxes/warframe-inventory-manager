@@ -1,8 +1,17 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from db import get_connection
 
 app = FastAPI()
 
+# Enable CORS so React frontend can make requests to FastAPI backend without getting blocked
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/weapons")
 def get_weapons(type: str = None, search: str = None):
@@ -19,6 +28,11 @@ def get_weapons(type: str = None, search: str = None):
 
     conditions = []
     params = []
+
+    # Exclude weapons without a description
+    # This is used for excluding Zaw components from list of weapons
+    conditions.append("description IS NOT NULL")
+    conditions.append("description <> ''")
 
     # Filter by type (primary/secondary/melee)
     if type:
