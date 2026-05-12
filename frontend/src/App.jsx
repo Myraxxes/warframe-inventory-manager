@@ -4,11 +4,25 @@ function App() {
   const [selectedType, setSelectedType] = useState("all");
   const [weapons, setWeapons] = useState([]);
   const [mastered, setMastered] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/weapons")
       .then((res) => res.json())
       .then((data) => setWeapons(data));
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowDropdown(false);
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
   }, []);
 
   // Handles marking a weapon as mastered or unmastered
@@ -37,6 +51,7 @@ function App() {
     }));
   };
 
+  // Weapons shown in main grid
   const filteredWeapons =
     (selectedType === "all"
       ? weapons
@@ -45,9 +60,18 @@ function App() {
       .slice()
       .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Search results (always searches ALL weapons)
+  const searchResults =
+    searchTerm.trim() === ""
+      ? []
+      : weapons
+          .filter((weapon) =>
+            weapon.name.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+
   return (
     <div>
-      <h1>Warframe Inventory Manager</h1>
+      <h1>Warframe Weapons</h1>
 
       {/* Tabs */}
       <div
@@ -64,7 +88,7 @@ function App() {
             onClick={() => setSelectedType(type)}
             style={{
               padding: "12px 22px",
-              fontSize: "14px",
+              fontSize: "16px",
               fontWeight: "bold",
               cursor: "pointer",
               border: "none",
@@ -73,12 +97,93 @@ function App() {
                 selectedType === type ? "#4caf50" : "#333",
               color: "white",
               minWidth: "120px",
-              transition: "0.15s ease",
             }}
           >
             {type.charAt(0).toUpperCase() + type.slice(1)}
           </button>
         ))}
+      </div>
+
+      {/* Search Bar */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: "20px",
+          position: "relative",
+        }}
+      >
+        <div
+          style={{
+            width: "400px",
+            position: "relative",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="text"
+            placeholder="Search weapons..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => {
+              if (searchResults.length > 0) {
+                setShowDropdown(true);
+              }
+            }}
+            style={{
+              width: "100%",
+              padding: "12px",
+              fontSize: "16px",
+              borderRadius: "6px",
+              border: "1px solid #666",
+            }}
+          />
+
+          {/* Search Results Dropdown */}
+          {showDropdown && searchResults.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                backgroundColor: "#222",
+                border: "1px solid #555",
+                borderRadius: "6px",
+                marginTop: "4px",
+                maxHeight: "220px",
+                overflowY: "auto",
+                overflowX: "hidden",
+                zIndex: 1000,
+              }}
+            >
+              {searchResults.map((weapon) => (
+                <div
+                  key={weapon.id}
+                  onClick={() => {
+                    setSelectedType(weapon.weapon_type);
+                    setSearchTerm("");
+                    setShowDropdown(false);
+                  }}
+                  style={{
+                    padding: "10px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #626262",
+                    color: "white",
+                  }}
+                >
+                  {weapon.name} (
+                  {weapon.weapon_type.charAt(0).toUpperCase() +
+                    weapon.weapon_type.slice(1)}
+                  )
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Weapon Grid */}
