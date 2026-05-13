@@ -6,6 +6,8 @@ function App() {
   const [mastered, setMastered] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [locked, setLocked] = useState({});
+
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/weapons")
@@ -51,6 +53,14 @@ function App() {
     }));
   };
 
+  // Toggle weapon lock state
+  const toggleLocked = (id) => {
+    setLocked((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   // Weapons shown in main grid
   const filteredWeapons =
     (selectedType === "all"
@@ -67,11 +77,11 @@ function App() {
       : weapons
           .filter((weapon) =>
             weapon.name.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          );
 
   return (
     <div>
-      <h1>Warframe Weapons</h1>
+      <h1>Warframe Inventory Manager</h1>
 
       {/* Tabs */}
       <div
@@ -88,7 +98,7 @@ function App() {
             onClick={() => setSelectedType(type)}
             style={{
               padding: "12px 22px",
-              fontSize: "16px",
+              fontSize: "14px",
               fontWeight: "bold",
               cursor: "pointer",
               border: "none",
@@ -204,40 +214,75 @@ function App() {
               height: "200px",
               textAlign: "center",
               cursor: "pointer",
+              position: "relative",
             }}
           >
-            <img
-              src={weapon.image_url}
-              style={{
-                width: "110px",
-                height: "110px",
-                objectFit: "contain",
+            {/* Lock icon */}
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLocked(weapon.id);
               }}
-            />
+              style={{
+                position: "absolute",
+                top: "8px",
+                right: "8px",
+                cursor: "pointer",
+                fontSize: "20px",
+              }}
+            >
+            {locked[weapon.id] ? "🔒" : "🔓"}
+          </div>
+              
+            {/* Mastery requirement */}
+            <div
+              style={{
+                position: "absolute",
+                top: "8px",
+                left: "8px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                padding: "4px 6px",
+                border: "1px solid #555",
+              }}
+            >
+              MR {weapon.mastery_req}
+            </div>
 
-            <div>{weapon.name}</div>
+          {/* Weapon image */}
+          <img
+            src={weapon.image_url}
+            style={{
+              width: "110px",
+              height: "110px",
+              objectFit: "contain",
+            }}
+          />
 
-            <div style={{ marginTop: "10px" }}>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleMastered(weapon.id);
-                }}
-                style={{
-                  padding: "10px 14px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  backgroundColor: mastered[weapon.id]
-                    ? "green"
-                    : "#444",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                }}
-              >
-                {mastered[weapon.id]
-                  ? "Mastered"
-                  : "Mark as Mastered"}
+          <div>{weapon.name}</div>
+          
+          {/* Mastery toggle button */}
+          <div style={{ marginTop: "10px" }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMastered(weapon.id);
+              }}
+              style={{
+                padding: "10px 14px",
+                fontSize: "14px",
+                cursor: "pointer",
+                backgroundColor: mastered[weapon.id]
+                  ? "green"
+                  : "#444",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+              }}
+            >
+              {mastered[weapon.id]
+                ? "Mastered"
+                : "Mark as Mastered"}
               </button>
             </div>
           </div>
